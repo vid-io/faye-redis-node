@@ -2,30 +2,13 @@ var Engine = function(server, options) {
   this._server  = server;
   this._options = options || {};
 
-  var redis  = require('redis'),
-      host   = this._options.host     || this.DEFAULT_HOST,
-      port   = this._options.port     || this.DEFAULT_PORT,
-      db     = this._options.database || this.DEFAULT_DATABASE,
-      auth   = this._options.password,
-      gc     = this._options.gc       || this.DEFAULT_GC,
-      socket = this._options.socket;
+  var factory  = this._options.factory,
+      gc       = this._options.gc || this.DEFAULT_GC;
 
-  this._ns  = this._options.namespace || '';
+  this._ns          = (this._options.namespace || 'faye') + ':';
 
-  if (socket) {
-    this._redis = redis.createClient(socket, {no_ready_check: true});
-    this._subscriber = redis.createClient(socket, {no_ready_check: true});
-  } else {
-    this._redis = redis.createClient(port, host, {no_ready_check: true});
-    this._subscriber = redis.createClient(port, host, {no_ready_check: true});
-  }
-
-  if (auth) {
-    this._redis.auth(auth);
-    this._subscriber.auth(auth);
-  }
-  this._redis.select(db);
-  this._subscriber.select(db);
+  this._redis       = factory({ no_ready_check: true });
+  this._subscriber  = factory({ no_ready_check: true });
 
   this._messageChannel = this._ns + '/notifications/messages';
   this._closeChannel   = this._ns + '/notifications/close';
